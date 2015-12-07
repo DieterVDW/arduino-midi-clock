@@ -1,7 +1,6 @@
 #include <TimerOne.h>
 
-#define TIMING_CLOCK 0xF8
-#define STARTUP_BPM 100
+#define MIDI_TIMING_CLOCK 0xF8
 #define CLOCKS_PER_BEAT 24
 #define PRINT_INTERVAL 10000
 #define MINIMUM_BPM 40 // Used for debouncing
@@ -10,9 +9,9 @@
 #define EXIT_MARGIN 150 // If no tap after 150% of last tap interval -> measure and set
 
 long intervalMicroSeconds;
-int bpm = STARTUP_BPM;
+int bpm;
 
-boolean tapping = false;
+boolean initialized = false;
 long minimumTapInterval = 60L * 1000 * 1000 / MAXIMUM_BPM;
 long maximumTapInterval = 60L * 1000 * 1000 / MINIMUM_BPM;
 
@@ -23,10 +22,13 @@ volatile long timesTapped = 0;
 void setup() {
   //  Set MIDI baud rate:
   Serial1.begin(31250);
-  intervalMicroSeconds = calculateIntervalMicroSecs(STARTUP_BPM);
+  attachInterrupt(digitalPinToInterrupt(0), tapInput, RISING);
+}
+
+void initializeTimer() {
   Timer1.initialize(intervalMicroSeconds);
   Timer1.attachInterrupt(sendClockPulse);
-  attachInterrupt(digitalPinToInterrupt(0), tapInput, RISING);
+  initialized == true;
 }
 
 void loop() {
@@ -39,6 +41,10 @@ void loop() {
     long avgTapInterval = (lastTapTime - firstTapTime) / (timesTapped-1);
     if ((now - lastTapTime) > (avgTapInterval * EXIT_MARGIN / 100)) {
       bpm = 60L * 1000 * 1000 / avgTapInterval;
+
+      if (!initialized) {
+        initializeTimer();
+      }
   
       Timer1.setPeriod(calculateIntervalMicroSecs(bpm));
       Serial.print("Setting BPM to: ");
@@ -66,7 +72,7 @@ void tapInput() {
 }
 
 void sendClockPulse() {
-  Serial1.write(TIMING_CLOCK);
+  Serial1.write(MIDI_TIMING_CLOCK);
 }
 
 long calculateIntervalMicroSecs(int bpm) {
