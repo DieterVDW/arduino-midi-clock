@@ -14,6 +14,8 @@
 #define BLINK_OUTPUT_PIN 5
 #define BLINK_TIME 4 // How long to keep LED lit in CLOCK counts (so range is [0,24])
 
+#define SYNC_OUTPUT_PIN 9 // Can be used to drive sync analog sequencer (Korg Monotribe etc ...)
+
 long intervalMicroSeconds;
 int bpm;
 
@@ -26,7 +28,6 @@ volatile long lastTapTime = 0;
 volatile long timesTapped = 0;
 
 volatile int blinkCount = 0;
-volatile boolean blinkState = false;
 
 void setup() {
   //  Set MIDI baud rate:
@@ -34,6 +35,7 @@ void setup() {
 
   // Set pin modes
   pinMode(BLINK_OUTPUT_PIN, OUTPUT);
+  pinMode(SYNC_OUTPUT_PIN, OUTPUT);
 
   // Get the saved BPM value
   bpm = EEPROM.read(EEPROM_ADDRESS) + 40; // We're subtracting 40 when saving to have higher range
@@ -93,10 +95,21 @@ void sendClockPulse() {
   Serial1.write(MIDI_TIMING_CLOCK);
 
   blinkCount = (blinkCount+1) % CLOCKS_PER_BEAT;
-  if (blinkState != (blinkCount < BLINK_TIME)) {
-    // Change the led state
-    blinkState = !blinkState;
-    analogWrite(BLINK_OUTPUT_PIN, blinkState ? 255 : 0);
+  if (blinkCount == 0) {
+    // Turn led on
+    analogWrite(BLINK_OUTPUT_PIN, 255);
+
+    // Set sync pin to HIGH
+    analogWrite(SYNC_OUTPUT_PIN, 255);
+  } else {
+    if (blinkCount == 1) {
+      // Set sync pin to LOW
+      analogWrite(SYNC_OUTPUT_PIN, 0);
+    }
+    if (blinkCount == BLINK_TIME) {
+      // Turn led on
+      analogWrite(BLINK_OUTPUT_PIN, 0);
+    }
   }
 }
 
