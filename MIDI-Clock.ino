@@ -2,6 +2,9 @@
 #include <EEPROM.h>
 
 #define MIDI_TIMING_CLOCK 0xF8
+#define MIDI_START 0xFA
+#define MIDI_STOP 0xFC
+
 #define CLOCKS_PER_BEAT 24
 #define PRINT_INTERVAL 10000
 #define MINIMUM_BPM 40 // Used for debouncing
@@ -19,6 +22,9 @@
 #define DIMMER_INPUT_PIN A0
 #define DIMMER_CHANGE_MARGIN 2
 
+#define START_STOP_INPUT_PIN A1
+#define DEBOUNCE_INTERVAL 500L // Milliseconds
+
 long intervalMicroSeconds;
 int bpm;
 
@@ -32,7 +38,10 @@ volatile long timesTapped = 0;
 
 volatile int blinkCount = 0;
 
-volatile int lastDimmerValue = 0;
+int lastDimmerValue = 0;
+
+boolean playing = false;
+long lastStartStopTime = 0;
 
 void setup() {
   //  Set MIDI baud rate:
@@ -42,6 +51,7 @@ void setup() {
   pinMode(BLINK_OUTPUT_PIN, OUTPUT);
   pinMode(SYNC_OUTPUT_PIN, OUTPUT);
   pinMode(DIMMER_INPUT_PIN, INPUT);
+  pinMode(START_STOP_INPUT_PIN, INPUT);
 
   // Get the saved BPM value
   bpm = EEPROM.read(EEPROM_ADDRESS) + 40; // We're subtracting 40 when saving to have higher range
@@ -91,8 +101,15 @@ void loop() {
     updateBpm();
     lastDimmerValue = curDimValue;
   }
-  
-  delay(100);
+
+  /*
+   * Check for start/stop button pressed
+   */
+  boolean startStopPressed = analogRead(START_STOP_INPUT_PIN) > 1024/2 ? true : false;
+  if (startStopPressed && (lastStartStopTime+(DEBOUNCE_INTERVAL*1000)) < now) {
+    startOrStop();
+    lastStartStopTime = now;
+  }
 }
 
 void tapInput() {
@@ -108,6 +125,17 @@ void tapInput() {
   timesTapped++;
   lastTapTime = now;
   Serial.println("Tap!");
+}
+
+void startOrStop() {
+  if (!playing) {
+    Serial.println("Start playing");
+    Serial1.write(MIDI_START);
+  } else {
+    Serial.println("Stop playing");
+    Serial1.write(MIDI_STOP);
+  }
+  playing = !playing;
 }
 
 void sendClockPulse() {
