@@ -22,4 +22,11 @@ Connect a button to D0
 - Tap the tempo (minimum 3 times)
 - After the last tap, clock tempo will be updated and MIDI clock signal will send new BPM
 
+### Extra functionality:
+- Connect a dimmer to A0 to set the tempo by twisting the knob!
+- Tempo blinking LED on pin A5
+- Sync signal on pin A9 (for example to sync with Korg Monotribe...)
+- MIDI real-time start/stop is sent when button press is detected on A1 port
+- Stores the BPM value and restores it on power up
+
 # Enjoy! :)
