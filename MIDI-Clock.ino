@@ -1,4 +1,5 @@
 #include <TimerOne.h>
+#include <EEPROM.h>
 
 #define MIDI_TIMING_CLOCK 0xF8
 #define CLOCKS_PER_BEAT 24
@@ -7,6 +8,8 @@
 #define MAXIMUM_BPM 300 // Used for debouncing
 #define MINIMUM_TAPS 3
 #define EXIT_MARGIN 150 // If no tap after 150% of last tap interval -> measure and set
+
+#define EEPROM_ADDRESS 0 // Where to save BPM
 
 long intervalMicroSeconds;
 int bpm;
@@ -22,16 +25,17 @@ volatile long timesTapped = 0;
 void setup() {
   //  Set MIDI baud rate:
   Serial1.begin(31250);
+
+  // Get the saved BPM value
+  bpm = EEPROM.read(EEPROM_ADDRESS) + 40; // We're subtracting 40 when saving to have higher range
   
   // Interrupt for catching tap events
   attachInterrupt(digitalPinToInterrupt(0), tapInput, RISING);
-}
 
-void initializeTimer() {
   // Attach the interrupt to send the MIDI clock and start the timer
   Timer1.initialize(intervalMicroSeconds);
+  Timer1.setPeriod(calculateIntervalMicroSecs(bpm));
   Timer1.attachInterrupt(sendClockPulse);
-  initialized == true;
 }
 
 void loop() {
@@ -45,15 +49,15 @@ void loop() {
     if ((now - lastTapTime) > (avgTapInterval * EXIT_MARGIN / 100)) {
       bpm = 60L * 1000 * 1000 / avgTapInterval;
 
-      if (!initialized) {
-        initializeTimer();
-      }
-  
       // Update the timer
       Timer1.setPeriod(calculateIntervalMicroSecs(bpm));
+
+      // Save the BPM
+      EEPROM.write(EEPROM_ADDRESS, bpm - 40); // Save with offset 40 to have higher range
+
       Serial.print("Set BPM to: ");
       Serial.println(bpm);
-  
+
       timesTapped = 0;
     }
   }
