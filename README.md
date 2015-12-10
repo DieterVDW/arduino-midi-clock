@@ -1,5 +1,10 @@
 # Arduino MIDI clock with tap tempo
 
+As seen on LittleBits:
+http://littlebits.cc/projects/littlebits-arduino-midi-master-clock-with-tap-tempo
+
+You can also do this with a regular Arduino, but you'll have some extra work soldering the button(s)/dimmer
+
 ## How to make a Arduino MIDI connector
 See the excellent tutorial at this link:
 http://www.instructables.com/id/Send-and-Receive-MIDI-with-Arduino/step3/Send-MIDI-Messages-with-Arduino-Hardware/ .
