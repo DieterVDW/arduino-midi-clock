@@ -22,10 +22,13 @@ volatile long timesTapped = 0;
 void setup() {
   //  Set MIDI baud rate:
   Serial1.begin(31250);
+  
+  // Interrupt for catching tap events
   attachInterrupt(digitalPinToInterrupt(0), tapInput, RISING);
 }
 
 void initializeTimer() {
+  // Attach the interrupt to send the MIDI clock and start the timer
   Timer1.initialize(intervalMicroSeconds);
   Timer1.attachInterrupt(sendClockPulse);
   initialized == true;
@@ -46,8 +49,9 @@ void loop() {
         initializeTimer();
       }
   
+      // Update the timer
       Timer1.setPeriod(calculateIntervalMicroSecs(bpm));
-      Serial.print("Setting BPM to: ");
+      Serial.print("Set BPM to: ");
       Serial.println(bpm);
   
       timesTapped = 0;
