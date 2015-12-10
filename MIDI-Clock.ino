@@ -16,6 +16,9 @@
 
 #define SYNC_OUTPUT_PIN 9 // Can be used to drive sync analog sequencer (Korg Monotribe etc ...)
 
+#define DIMMER_INPUT_PIN A0
+#define DIMMER_CHANGE_MARGIN 2
+
 long intervalMicroSeconds;
 int bpm;
 
@@ -29,6 +32,8 @@ volatile long timesTapped = 0;
 
 volatile int blinkCount = 0;
 
+volatile int lastDimmerValue = 0;
+
 void setup() {
   //  Set MIDI baud rate:
   Serial1.begin(31250);
@@ -36,6 +41,7 @@ void setup() {
   // Set pin modes
   pinMode(BLINK_OUTPUT_PIN, OUTPUT);
   pinMode(SYNC_OUTPUT_PIN, OUTPUT);
+  pinMode(DIMMER_INPUT_PIN, INPUT);
 
   // Get the saved BPM value
   bpm = EEPROM.read(EEPROM_ADDRESS) + 40; // We're subtracting 40 when saving to have higher range
@@ -47,10 +53,17 @@ void setup() {
   Timer1.initialize(intervalMicroSeconds);
   Timer1.setPeriod(calculateIntervalMicroSecs(bpm));
   Timer1.attachInterrupt(sendClockPulse);
+
+  // Initialize dimmer value
+  lastDimmerValue = analogRead(DIMMER_INPUT_PIN);
 }
 
 void loop() {
   long now = micros();
+
+  /*
+   * Handle tapping of the tap tempo button
+   */
   if (timesTapped > 0 && timesTapped < MINIMUM_TAPS && (now - lastTapTime) > maximumTapInterval) {
     // Single taps, not enough to calculate a BPM -> ignore!
 //    Serial.println("Ignoring lone taps!");
@@ -60,18 +73,25 @@ void loop() {
     if ((now - lastTapTime) > (avgTapInterval * EXIT_MARGIN / 100)) {
       bpm = 60L * 1000 * 1000 / avgTapInterval;
 
-      // Update the timer
-      Timer1.setPeriod(calculateIntervalMicroSecs(bpm));
-
-      // Save the BPM
-      EEPROM.write(EEPROM_ADDRESS, bpm - 40); // Save with offset 40 to have higher range
-
-      Serial.print("Set BPM to: ");
-      Serial.println(bpm);
+      updateBpm();
 
       timesTapped = 0;
     }
   }
+
+  /*
+   * Handle change of the dimmer input
+   */
+  int curDimValue = analogRead(DIMMER_INPUT_PIN);
+  if (curDimValue > lastDimmerValue + DIMMER_CHANGE_MARGIN
+      || curDimValue < lastDimmerValue - DIMMER_CHANGE_MARGIN) {
+    // We've got movement!!
+    bpm = map(curDimValue, 0, 1024, MINIMUM_BPM, MAXIMUM_BPM);
+
+    updateBpm();
+    lastDimmerValue = curDimValue;
+  }
+  
   delay(100);
 }
 
@@ -111,6 +131,17 @@ void sendClockPulse() {
       analogWrite(BLINK_OUTPUT_PIN, 0);
     }
   }
+}
+
+void updateBpm() {
+    // Update the timer
+  Timer1.setPeriod(calculateIntervalMicroSecs(bpm));
+
+  // Save the BPM
+  EEPROM.write(EEPROM_ADDRESS, bpm - 40); // Save with offset 40 to have higher range
+
+  Serial.print("Set BPM to: ");
+  Serial.println(bpm);
 }
 
 long calculateIntervalMicroSecs(int bpm) {
