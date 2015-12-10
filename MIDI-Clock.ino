@@ -11,6 +11,9 @@
 
 #define EEPROM_ADDRESS 0 // Where to save BPM
 
+#define BLINK_OUTPUT_PIN 5
+#define BLINK_TIME 4 // How long to keep LED lit in CLOCK counts (so range is [0,24])
+
 long intervalMicroSeconds;
 int bpm;
 
@@ -22,9 +25,15 @@ volatile long firstTapTime = 0;
 volatile long lastTapTime = 0;
 volatile long timesTapped = 0;
 
+volatile int blinkCount = 0;
+volatile boolean blinkState = false;
+
 void setup() {
   //  Set MIDI baud rate:
   Serial1.begin(31250);
+
+  // Set pin modes
+  pinMode(BLINK_OUTPUT_PIN, OUTPUT);
 
   // Get the saved BPM value
   bpm = EEPROM.read(EEPROM_ADDRESS) + 40; // We're subtracting 40 when saving to have higher range
@@ -80,7 +89,15 @@ void tapInput() {
 }
 
 void sendClockPulse() {
+  // Write the timing clock byte
   Serial1.write(MIDI_TIMING_CLOCK);
+
+  blinkCount = (blinkCount+1) % CLOCKS_PER_BEAT;
+  if (blinkState != (blinkCount < BLINK_TIME)) {
+    // Change the led state
+    blinkState = !blinkState;
+    analogWrite(BLINK_OUTPUT_PIN, blinkState ? 255 : 0);
+  }
 }
 
 long calculateIntervalMicroSecs(int bpm) {
