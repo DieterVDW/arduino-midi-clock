@@ -47,7 +47,7 @@ long lastStartStopTime = 0;
 
 void setup() {
   //  Set MIDI baud rate:
-  Serial1.begin(31250);
+  Serial.begin(31250);
 
   // Set pin modes
   pinMode(BLINK_OUTPUT_PIN, OUTPUT);
@@ -78,7 +78,6 @@ void loop() {
    */
   if (timesTapped > 0 && timesTapped < MINIMUM_TAPS && (now - lastTapTime) > maximumTapInterval) {
     // Single taps, not enough to calculate a BPM -> ignore!
-//    Serial.println("Ignoring lone taps!");
     timesTapped = 0;
   } else if (timesTapped >= MINIMUM_TAPS) {
     long avgTapInterval = (lastTapTime - firstTapTime) / (timesTapped-1);
@@ -126,23 +125,20 @@ void tapInput() {
 
   timesTapped++;
   lastTapTime = now;
-  Serial.println("Tap!");
 }
 
 void startOrStop() {
   if (!playing) {
-    Serial.println("Start playing");
-    Serial1.write(MIDI_START);
+    Serial.write(MIDI_START);
   } else {
-    Serial.println("Stop playing");
-    Serial1.write(MIDI_STOP);
+    Serial.write(MIDI_STOP);
   }
   playing = !playing;
 }
 
 void sendClockPulse() {
   // Write the timing clock byte
-  Serial1.write(MIDI_TIMING_CLOCK);
+  Serial.write(MIDI_TIMING_CLOCK);
 
   blinkCount = (blinkCount+1) % CLOCKS_PER_BEAT;
   if (blinkCount == 0) {
@@ -171,9 +167,6 @@ void updateBpm(long now) {
 
   // Save the BPM
   EEPROM.write(EEPROM_ADDRESS, bpm - 40); // Save with offset 40 to have higher range
-
-  Serial.print("Set BPM to: ");
-  Serial.println(bpm);
 }
 
 long calculateIntervalMicroSecs(int bpm) {
