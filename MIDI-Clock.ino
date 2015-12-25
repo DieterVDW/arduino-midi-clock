@@ -85,7 +85,7 @@ void loop() {
     if ((now - lastTapTime) > (avgTapInterval * EXIT_MARGIN / 100)) {
       bpm = 60L * 1000 * 1000 / avgTapInterval;
 
-      updateBpm();
+      updateBpm(now);
 
       timesTapped = 0;
     }
@@ -100,7 +100,7 @@ void loop() {
     // We've got movement!!
     bpm = map(curDimValue, 0, 1024, MINIMUM_BPM, MAXIMUM_BPM);
 
-    updateBpm();
+    updateBpm(now);
     lastDimmerValue = curDimValue;
   }
 
@@ -163,9 +163,11 @@ void sendClockPulse() {
   }
 }
 
-void updateBpm() {
-    // Update the timer
-  Timer1.setPeriod(calculateIntervalMicroSecs(bpm));
+void updateBpm(long now) {
+  // Update the timer
+  long interval = calculateIntervalMicroSecs(bpm);
+  Timer1.setPeriod(interval);
+  blinkCount = (now - lastTapTime / interval) % CLOCKS_PER_BEAT;
 
   // Save the BPM
   EEPROM.write(EEPROM_ADDRESS, bpm - 40); // Save with offset 40 to have higher range
