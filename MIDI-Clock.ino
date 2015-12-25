@@ -161,7 +161,7 @@ void sendClockPulse() {
 
 void updateBpm(long now) {
   // Update the timer
-  int interval = calculateIntervalMicroSecs(bpm);
+  long interval = calculateIntervalMicroSecs(bpm);
   Timer1.setPeriod(interval);
   blinkCount = (now - lastTapTime / interval) % CLOCKS_PER_BEAT;
 
