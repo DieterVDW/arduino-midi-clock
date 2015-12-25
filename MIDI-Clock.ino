@@ -9,6 +9,8 @@
 #define PRINT_INTERVAL 10000
 #define MINIMUM_BPM 40 // Used for debouncing
 #define MAXIMUM_BPM 300 // Used for debouncing
+
+#define TAP_PIN 2
 #define MINIMUM_TAPS 3
 #define EXIT_MARGIN 150 // If no tap after 150% of last tap interval -> measure and set
 
@@ -57,7 +59,7 @@ void setup() {
   bpm = EEPROM.read(EEPROM_ADDRESS) + 40; // We're subtracting 40 when saving to have higher range
   
   // Interrupt for catching tap events
-  attachInterrupt(digitalPinToInterrupt(0), tapInput, RISING);
+  attachInterrupt(digitalPinToInterrupt(TAP_PIN), tapInput, RISING);
 
   // Attach the interrupt to send the MIDI clock and start the timer
   Timer1.initialize(intervalMicroSeconds);
