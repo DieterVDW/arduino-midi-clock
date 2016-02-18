@@ -46,6 +46,7 @@ boolean playing = false;
 long lastStartStopTime = 0;
 
 void setup() {
+  Serial.begin(38400);
   //  Set MIDI baud rate:
   Serial1.begin(31250);
 
@@ -111,6 +112,14 @@ void loop() {
   if (startStopPressed && (lastStartStopTime+(DEBOUNCE_INTERVAL*1000)) < now) {
     startOrStop();
     lastStartStopTime = now;
+  }
+
+  /*
+   * Forward received serial data
+   */
+  while (Serial1.available()) {
+    int b = Serial1.read();
+    Serial1.write(b);
   }
 }
 
