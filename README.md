@@ -34,4 +34,10 @@ Connect a button to D0
 - MIDI real-time start/stop is sent when button press is detected on A1 port
 - Stores the BPM value and restores it on power up
 
+# Branches
+
+- master : Code for the Arduino Leonardo (or LittleBits Arduino)
+- arduino-uno: Code for Arduino Uno and compatible devices (D0/D1 RX/TX pins are used for MIDI in/out, so no debug console!)
+- olimex-midi-shield: Based on the arduino-uno branch, but with some tweaks to make the code work better with the Olimex MIDI shield (https://www.olimex.com/Products/Duino/Shields/SHIELD-MIDI/open-source-hardware) (Work in progress!)
+
 # Enjoy! :)
