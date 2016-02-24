@@ -9,6 +9,9 @@ You can also do this with a regular Arduino, but you'll have some extra work sol
 See the excellent tutorial at this link:
 http://www.instructables.com/id/Send-and-Receive-MIDI-with-Arduino/step3/Send-MIDI-Messages-with-Arduino-Hardware/ .
 
+Or check the electrical spec here:
+https://www.midi.org/articles/midi-electrical-specifications
+
 ## Connections
 
 ### For MIDI out
