@@ -16,10 +16,10 @@
 
 #define EEPROM_ADDRESS 0 // Where to save BPM
 
-#define BLINK_OUTPUT_PIN 5
+#define BLINK_OUTPUT_PIN 6
 #define BLINK_TIME 4 // How long to keep LED lit in CLOCK counts (so range is [0,24])
 
-#define SYNC_OUTPUT_PIN 9 // Can be used to drive sync analog sequencer (Korg Monotribe etc ...)
+#define SYNC_OUTPUT_PIN 7 // Can be used to drive sync analog sequencer (Korg Monotribe etc ...)
 
 #define DIMMER_INPUT_PIN A0
 #define DIMMER_CHANGE_MARGIN 2
