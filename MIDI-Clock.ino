@@ -52,6 +52,17 @@
 #define MIDI_FORWARD
 
 /*
+ * FEATURE: TM1637 display BPM output
+ */
+#define TM1637_DISPLAY
+#ifdef TM1637_DISPLAY
+#include <TM1637Display.h>
+#define TM1637_CLK_PIN 3
+#define TM1637_DIO_PIN 4
+#define TM1637_BRIGHTNESS 0x0f
+#endif
+
+/*
  * GENERAL PARAMETERS
  */
 #define MIDI_TIMING_CLOCK 0xF8
@@ -77,6 +88,11 @@ int lastDimmerValue = 0;
 
 boolean playing = false;
 long lastStartStopTime = 0;
+
+#ifdef TM1637_DISPLAY
+TM1637Display display(TM1637_CLK_PIN, TM1637_DIO_PIN);
+uint8_t tm1637_data[4] = {0x00, 0x00, 0x00, 0x00};
+#endif
 
 void setup() {
   Serial.begin(38400);
@@ -115,6 +131,11 @@ void setup() {
 #ifdef DIMMER_INPUT_PIN
   // Initialize dimmer value
   lastDimmerValue = analogRead(DIMMER_INPUT_PIN);
+#endif
+
+#ifdef TM1637_DISPLAY
+  display.setBrightness(TM1637_BRIGHTNESS);
+  setDisplayValue(bpm);
 #endif
 }
 
@@ -248,10 +269,25 @@ void updateBpm(long now) {
 
   Serial.print("Set BPM to: ");
   Serial.println(bpm);
+
+#ifdef TM1637_DISPLAY
+  setDisplayValue(bpm);
+#endif
 }
 
 long calculateIntervalMicroSecs(int bpm) {
   // Take care about overflows!
   return 60L * 1000 * 1000 / bpm / CLOCKS_PER_BEAT;
 }
+
+#ifdef TM1637_DISPLAY
+void setDisplayValue(int value) {
+  tm1637_data[0] = value >= 1000 ? display.encodeDigit(value / 1000) : 0x00;
+  tm1637_data[1] = value >= 100 ? display.encodeDigit((value / 100) % 10) : 0x00;
+  tm1637_data[2] = value >= 10 ? display.encodeDigit((value / 10) % 10) : 0x00;
+  tm1637_data[3] = display.encodeDigit(value % 10);
+  display.setSegments(tm1637_data);
+}
+#endif
+
 
