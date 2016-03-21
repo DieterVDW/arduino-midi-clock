@@ -117,7 +117,7 @@ void setup() {
   // Get the saved BPM value from 2 stored bytes: MSB LSB
   bpm = EEPROM.read(EEPROM_ADDRESS) << 8;
   bpm += EEPROM.read(EEPROM_ADDRESS + 1);
-  if (bpm < MINIMUM_BPM || bpm > MAXIMUM_BPM) {
+  if (bpm < MINIMUM_BPM * 10 || bpm > MAXIMUM_BPM * 10) {
     bpm = 1200;
   }
 #endif
