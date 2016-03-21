@@ -17,7 +17,7 @@
  */
 #define DIMMER_INPUT_PIN A0
 
-#define DIMMER_CHANGE_MARGIN 2
+#define DIMMER_CHANGE_MARGIN 20 // Big value to make sure this doesn't interfere. Tweak as needed.
 
 /*
  * FEATURE: BLINK TEMPO LED
