@@ -73,7 +73,7 @@
 #define MAXIMUM_BPM 300 // Used for debouncing
 
 long intervalMicroSeconds;
-int bpm;
+int bpm;  // BPM in tenths of a BPM!!
 
 boolean initialized = false;
 long minimumTapInterval = 60L * 1000 * 1000 / MAXIMUM_BPM;
@@ -119,7 +119,7 @@ void setup() {
   bpm = EEPROM.read(EEPROM_ADDRESS) << 8;
   bpm += EEPROM.read(EEPROM_ADDRESS + 1);
   if (bpm < MINIMUM_BPM || bpm > MAXIMUM_BPM) {
-    bpm = 120;
+    bpm = 1200;
   }
 #endif
 
@@ -158,7 +158,7 @@ void loop() {
   } else if (timesTapped >= MINIMUM_TAPS) {
     long avgTapInterval = (lastTapTime - firstTapTime) / (timesTapped - 1);
     if ((now - lastTapTime) > (avgTapInterval * EXIT_MARGIN / 100)) {
-      bpm = 60L * 1000 * 1000 / avgTapInterval;
+      bpm = 60L * 1000 * 1000 * 10 / avgTapInterval;
 
       updateBpm(now);
 
@@ -175,7 +175,7 @@ void loop() {
   if (curDimValue > lastDimmerValue + DIMMER_CHANGE_MARGIN
       || curDimValue < lastDimmerValue - DIMMER_CHANGE_MARGIN) {
     // We've got movement!!
-    bpm = map(curDimValue, 0, 1024, MINIMUM_BPM, MAXIMUM_BPM);
+    bpm = map(curDimValue, 0, 1024, MINIMUM_BPM * 10, MAXIMUM_BPM * 10);
 
     updateBpm(now);
     lastDimmerValue = curDimValue;
@@ -283,7 +283,7 @@ void updateBpm(long now) {
 
 long calculateIntervalMicroSecs(int bpm) {
   // Take care about overflows!
-  return 60L * 1000 * 1000 / bpm / CLOCKS_PER_BEAT;
+  return 60L * 1000 * 1000 * 10 / bpm / CLOCKS_PER_BEAT;
 }
 
 #ifdef TM1637_DISPLAY
