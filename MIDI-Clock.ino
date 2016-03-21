@@ -38,6 +38,8 @@
 #define MIDI_START 0xFA
 #define MIDI_STOP 0xFC
 
+#define DEBOUNCE_INTERVAL 500L // Milliseconds
+
 /*
  * FEATURE: EEPROM BPM storage
  */
@@ -69,7 +71,6 @@
 #define CLOCKS_PER_BEAT 24
 #define MINIMUM_BPM 40 // Used for debouncing
 #define MAXIMUM_BPM 300 // Used for debouncing
-#define DEBOUNCE_INTERVAL 500L // Milliseconds
 
 long intervalMicroSeconds;
 int bpm;
