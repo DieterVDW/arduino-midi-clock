@@ -115,8 +115,12 @@ void setup() {
 #endif
 
 #ifdef EEPROM_ADDRESS
-  // Get the saved BPM value
-  bpm = EEPROM.read(EEPROM_ADDRESS) + 40; // We're subtracting 40 when saving to have higher range
+  // Get the saved BPM value from 2 stored bytes: MSB LSB
+  bpm = EEPROM.read(EEPROM_ADDRESS) << 8;
+  bpm += EEPROM.read(EEPROM_ADDRESS + 1);
+  if (bpm < MINIMUM_BPM || bpm > MAXIMUM_BPM) {
+    bpm = 120;
+  }
 #endif
 
 #ifdef TAP_PIN
@@ -264,8 +268,9 @@ void updateBpm(long now) {
   blinkCount = (now - lastTapTime / interval) % CLOCKS_PER_BEAT;
 
 #ifdef EEPROM_ADDRESS
-  // Save the BPM
-  EEPROM.write(EEPROM_ADDRESS, bpm - 40); // Save with offset 40 to have higher range
+  // Save the BPM in 2 bytes, MSB LSB
+  EEPROM.write(EEPROM_ADDRESS, bpm / 256);
+  EEPROM.write(EEPROM_ADDRESS + 1, bpm % 256);
 #endif
 
   Serial.print("Set BPM to: ");
