@@ -8,12 +8,11 @@
  * FEATURE: TAP BPM INPUT
  */
 #define TAP_PIN 2
+#define TAP_PIN_MODE INPUT_PULLUP
 #define TAP_PIN_POLARITY FALLING
 
 #define MINIMUM_TAPS 3
 #define EXIT_MARGIN 150 // If no tap after 150% of last tap interval -> measure and set
-
-#define PULL_UP_PIN 8
 
 /*
  * FEATURE: DIMMER BPM INPUT
@@ -46,8 +45,9 @@
 /*
  * FEATURE: Send MIDI start/stop
  */
-// #define START_STOP_INPUT_PIN 4
-#define START_STOP_PIN_POLARITY 1024 // 0 = POSITIVE, 1024 = NEGATIVE
+#define START_STOP_INPUT_PIN 4
+#define START_STOP_INPUT_PIN_MODE INPUT_PULLUP
+#define START_STOP_INPUT_PIN_PRESSED_VALUE LOW
 
 #define MIDI_START 0xFA
 #define MIDI_STOP 0xFC
@@ -118,12 +118,6 @@ void setup() {
   //  Set MIDI baud rate:
   Serial1.begin(31250);
 
-#ifdef PULL_UP_PIN
-  // Use this pin for pull-up on tap input pin
-  pinMode(PULL_UP_PIN, OUTPUT);
-  analogWrite(PULL_UP_PIN, 255);
-#endif
-
   // Set pin modes
 #ifdef BLINK_OUTPUT_PIN
   pinMode(BLINK_OUTPUT_PIN, OUTPUT);
@@ -135,7 +129,7 @@ void setup() {
   pinMode(DIMMER_INPUT_PIN, INPUT);
 #endif
 #ifdef START_STOP_INPUT_PIN
-  pinMode(START_STOP_INPUT_PIN, INPUT);
+  pinMode(START_STOP_INPUT_PIN, START_STOP_INPUT_PIN_MODE);
 #endif
 
 #ifdef EEPROM_ADDRESS
@@ -149,6 +143,7 @@ void setup() {
 
 #ifdef TAP_PIN
   // Interrupt for catching tap events
+  pinMode(TAP_PIN, TAP_PIN_MODE);
   attachInterrupt(digitalPinToInterrupt(TAP_PIN), tapInput, TAP_PIN_POLARITY);
 #endif
 
@@ -230,8 +225,8 @@ void loop() {
   /*
    * Check for start/stop button pressed
    */
-  boolean startStopPressed = (START_STOP_PIN_POLARITY - analogRead(START_STOP_INPUT_PIN)) > 1024 / 2 ? true : false;
-  if (startStopPressed && (lastStartStopTime + (DEBOUNCE_INTERVAL * 1000)) < now) {
+  int startStopPressed = digitalRead(START_STOP_INPUT_PIN);
+  if (startStopPressed == START_STOP_INPUT_PIN_PRESSED_VALUE && (lastStartStopTime + (DEBOUNCE_INTERVAL * 1000)) < now) {
     startOrStop();
     lastStartStopTime = now;
   }
