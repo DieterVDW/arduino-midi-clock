@@ -8,6 +8,7 @@
  * FEATURE: TAP BPM INPUT
  */
 #define TAP_PIN 2
+#define TAP_PIN_POLARITY RISING
 
 #define MINIMUM_TAPS 3
 #define EXIT_MARGIN 150 // If no tap after 150% of last tap interval -> measure and set
@@ -23,17 +24,20 @@
  * FEATURE: BLINK TEMPO LED
  */
 #define BLINK_OUTPUT_PIN 5
+#define BLINK_PIN_POLARITY 0  // 0 = POSITIVE, 255 - NEGATIVE
 #define BLINK_TIME 4 // How long to keep LED lit in CLOCK counts (so range is [0,24])
 
 /*
  * FEATURE: SYNC PULSE OUTPUT
  */
 #define SYNC_OUTPUT_PIN 9 // Can be used to drive sync analog sequencer (Korg Monotribe etc ...)
+#define SYNC_PIN_POLARITY 0 // 0 = POSITIVE, 255 - NEGATIVE
 
 /*
  * FEATURE: Send MIDI start/stop
  */
 #define START_STOP_INPUT_PIN A1
+#define START_STOP_PIN_POLARITY 0 // 0 = POSITIVE, 1024 = NEGATIVE
 
 #define MIDI_START 0xFA
 #define MIDI_STOP 0xFC
@@ -124,7 +128,7 @@ void setup() {
 
 #ifdef TAP_PIN
   // Interrupt for catching tap events
-  attachInterrupt(digitalPinToInterrupt(TAP_PIN), tapInput, RISING);
+  attachInterrupt(digitalPinToInterrupt(TAP_PIN), tapInput, TAP_PIN_POLARITY);
 #endif
 
   // Attach the interrupt to send the MIDI clock and start the timer
@@ -184,7 +188,7 @@ void loop() {
   /*
    * Check for start/stop button pressed
    */
-  boolean startStopPressed = analogRead(START_STOP_INPUT_PIN) > 1024 / 2 ? true : false;
+  boolean startStopPressed = (START_STOP_PIN_POLARITY - analogRead(START_STOP_INPUT_PIN)) > 1024 / 2 ? true : false;
   if (startStopPressed && (lastStartStopTime + (DEBOUNCE_INTERVAL * 1000)) < now) {
     startOrStop();
     lastStartStopTime = now;
@@ -233,24 +237,24 @@ void sendClockPulse() {
   if (blinkCount == 0) {
     // Turn led on
 #ifdef BLINK_OUTPUT_PIN
-    analogWrite(BLINK_OUTPUT_PIN, 255);
+    analogWrite(BLINK_OUTPUT_PIN, 255 - BLINK_PIN_POLARITY);
 #endif
 
 #ifdef SYNC_OUTPUT_PIN
     // Set sync pin to HIGH
-    analogWrite(SYNC_OUTPUT_PIN, 255);
+    analogWrite(SYNC_OUTPUT_PIN, 255 - SYNC_PIN_POLARITY);
 #endif
   } else {
 #ifdef SYNC_OUTPUT_PIN
     if (blinkCount == 1) {
       // Set sync pin to LOW
-      analogWrite(SYNC_OUTPUT_PIN, 0);
+      analogWrite(SYNC_OUTPUT_PIN, 0 + SYNC_PIN_POLARITY);
     }
-#ifdef BLINK_OUTPUT_PIN
 #endif
+#ifdef BLINK_OUTPUT_PIN
     if (blinkCount == BLINK_TIME) {
       // Turn led on
-      analogWrite(BLINK_OUTPUT_PIN, 0);
+      analogWrite(BLINK_OUTPUT_PIN, 0 + BLINK_PIN_POLARITY);
     }
 #endif
   }
