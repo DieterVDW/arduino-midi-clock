@@ -266,7 +266,6 @@ void updateBpm(long now) {
   // Update the timer
   long interval = calculateIntervalMicroSecs(bpm);
   Timer1.setPeriod(interval);
-  blinkCount = (now - lastTapTime / interval) % CLOCKS_PER_BEAT;
 
 #ifdef EEPROM_ADDRESS
   // Save the BPM in 2 bytes, MSB LSB
@@ -275,7 +274,9 @@ void updateBpm(long now) {
 #endif
 
   Serial.print("Set BPM to: ");
-  Serial.println(bpm);
+  Serial.print(bpm / 10);
+  Serial.print('.');
+  Serial.println(bpm % 10);
 
 #ifdef TM1637_DISPLAY
   setDisplayValue(bpm);
