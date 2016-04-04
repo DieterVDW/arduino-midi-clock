@@ -264,7 +264,6 @@ void updateBpm(long now) {
   // Update the timer
   long interval = calculateIntervalMicroSecs(bpm);
   Timer1.setPeriod(interval);
-  blinkCount = (now - lastTapTime / interval) % CLOCKS_PER_BEAT;
 
 #ifdef EEPROM_ADDRESS
   // Save the BPM in 2 bytes, MSB LSB
