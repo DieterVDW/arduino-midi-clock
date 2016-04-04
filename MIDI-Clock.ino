@@ -277,7 +277,9 @@ void updateBpm(long now) {
 #endif
 
   Serial.print("Set BPM to: ");
-  Serial.println(bpm);
+  Serial.print(bpm / 10);
+  Serial.print('.');
+  Serial.println(bpm % 10);
 
 #ifdef TM1637_DISPLAY
   setDisplayValue(bpm);
