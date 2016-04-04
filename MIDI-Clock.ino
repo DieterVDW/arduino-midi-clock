@@ -16,9 +16,17 @@
 /*
  * FEATURE: DIMMER BPM INPUT
  */
-#define DIMMER_INPUT_PIN A0
+// #define DIMMER_INPUT_PIN A0
 
 #define DIMMER_CHANGE_MARGIN 20 // Big value to make sure this doesn't interfere. Tweak as needed.
+
+/*
+ * FEATURE: DIMMER BPM INCREASE/DECREASE
+ */
+#define DIMMER_CHANGE_PIN A1
+#define DEAD_ZONE 50
+#define CHANGE_THRESHOLD 5000
+#define RATE_DIVISOR 30
 
 /*
  * FEATURE: BLINK TEMPO LED
@@ -97,6 +105,10 @@ long lastStartStopTime = 0;
 #ifdef TM1637_DISPLAY
 TM1637Display display(TM1637_CLK_PIN, TM1637_DIO_PIN);
 uint8_t tm1637_data[4] = {0x00, 0x00, 0x00, 0x00};
+#endif
+
+#ifdef DIMMER_CHANGE_PIN
+long changeValue = 0;
 #endif
 
 void setup() {
@@ -185,6 +197,24 @@ void loop() {
 
     updateBpm(now);
     lastDimmerValue = curDimValue;
+  }
+#endif
+
+#ifdef DIMMER_CHANGE_PIN
+  int curDimValue = analogRead(DIMMER_CHANGE_PIN);
+  if (bpm > MINIMUM_BPM && curDimValue < (512 - DEAD_ZONE)) {
+    int val = (512 - DEAD_ZONE - curDimValue) / RATE_DIVISOR;
+    changeValue += val * val;
+  } else if (bpm < MAXIMUM_BPM && curDimValue > (512 + DEAD_ZONE)) {
+    int val = (curDimValue - 512 - DEAD_ZONE) / RATE_DIVISOR;
+    changeValue += val * val;
+  } else {
+    changeValue = 0;
+  }
+  if (changeValue > CHANGE_THRESHOLD) {
+    bpm += curDimValue < 512 ? -1 : 1;
+    updateBpm(now);
+    changeValue = 0;
   }
 #endif
 
