@@ -13,26 +13,26 @@
 #define MINIMUM_TAPS 3
 #define EXIT_MARGIN 150 // If no tap after 150% of last tap interval -> measure and set
 
-#define PULL_UP_PIN 4
+#define PULL_UP_PIN 8
 
 /*
  * FEATURE: DIMMER BPM INPUT
  */
 #define DIMMER_INPUT_PIN A1
 
-#define DIMMER_CHANGE_MARGIN 20 // Big value to make sure this doesn't interfere. Tweak as needed.
+#define DIMMER_CHANGE_MARGIN 2 // Big value to make sure this doesn't interfere. Tweak as needed.
 
 /*
  * FEATURE: BLINK TEMPO LED
  */
 #define BLINK_OUTPUT_PIN 7
 #define BLINK_PIN_POLARITY 255  // 0 = POSITIVE, 255 - NEGATIVE
-#define BLINK_TIME 4 // How long to keep LED lit in CLOCK counts (so range is [0,24])
+#define BLINK_TIME 2 // How long to keep LED lit in CLOCK counts (so range is [0,24])
 
 /*
  * FEATURE: SYNC PULSE OUTPUT
  */
-#define SYNC_OUTPUT_PIN 6 // Can be used to drive sync analog sequencer (Korg Monotribe etc ...)
+// #define SYNC_OUTPUT_PIN 6 // Can be used to drive sync analog sequencer (Korg Monotribe etc ...)
 #define SYNC_PIN_POLARITY 255 // 0 = POSITIVE, 255 - NEGATIVE
 
 /*
@@ -62,7 +62,7 @@
 /*
  * FEATURE: TM1637 display BPM output
  */
-#define TM1637_DISPLAY
+// #define TM1637_DISPLAY
 #ifdef TM1637_DISPLAY
 #include <TM1637Display.h>
 #define TM1637_CLK_PIN 10
