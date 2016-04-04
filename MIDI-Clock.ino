@@ -163,8 +163,10 @@ void loop() {
     long avgTapInterval = (lastTapTime - firstTapTime) / (timesTapped - 1);
     if ((now - lastTapTime) > (avgTapInterval * EXIT_MARGIN / 100)) {
       bpm = 60L * 1000 * 1000 * 10 / avgTapInterval;
-
       updateBpm(now);
+  
+      // Update blinkCount to make sure LED blink matches tapped beat
+      blinkCount = ((now - lastTapTime) * 24 / avgTapInterval) % CLOCKS_PER_BEAT;
 
       timesTapped = 0;
     }
