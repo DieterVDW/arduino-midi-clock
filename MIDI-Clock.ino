@@ -73,15 +73,15 @@
  */
 #define MIDI_TIMING_CLOCK 0xF8
 #define CLOCKS_PER_BEAT 24
-#define MINIMUM_BPM 40 // Used for debouncing
-#define MAXIMUM_BPM 300 // Used for debouncing
+#define MINIMUM_BPM 400 // Used for debouncing
+#define MAXIMUM_BPM 3000 // Used for debouncing
 
 long intervalMicroSeconds;
 int bpm;  // BPM in tenths of a BPM!!
 
 boolean initialized = false;
-long minimumTapInterval = 60L * 1000 * 1000 / MAXIMUM_BPM;
-long maximumTapInterval = 60L * 1000 * 1000 / MINIMUM_BPM;
+long minimumTapInterval = 60L * 1000 * 1000 * 10 / MAXIMUM_BPM;
+long maximumTapInterval = 60L * 1000 * 1000 * 10 / MINIMUM_BPM;
 
 volatile long firstTapTime = 0;
 volatile long lastTapTime = 0;
@@ -122,7 +122,7 @@ void setup() {
   // Get the saved BPM value from 2 stored bytes: MSB LSB
   bpm = EEPROM.read(EEPROM_ADDRESS) << 8;
   bpm += EEPROM.read(EEPROM_ADDRESS + 1);
-  if (bpm < MINIMUM_BPM * 10 || bpm > MAXIMUM_BPM * 10) {
+  if (bpm < MINIMUM_BPM || bpm > MAXIMUM_BPM) {
     bpm = 1200;
   }
 #endif
@@ -181,7 +181,7 @@ void loop() {
   if (curDimValue > lastDimmerValue + DIMMER_CHANGE_MARGIN
       || curDimValue < lastDimmerValue - DIMMER_CHANGE_MARGIN) {
     // We've got movement!!
-    bpm = map(curDimValue, 0, 1024, MINIMUM_BPM * 10, MAXIMUM_BPM * 10);
+    bpm = map(curDimValue, 0, 1024, MINIMUM_BPM, MAXIMUM_BPM);
 
     updateBpm(now);
     lastDimmerValue = curDimValue;
