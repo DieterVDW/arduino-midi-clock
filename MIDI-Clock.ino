@@ -13,6 +13,8 @@
 #define MINIMUM_TAPS 3
 #define EXIT_MARGIN 150 // If no tap after 150% of last tap interval -> measure and set
 
+#define PULL_UP_PIN 4
+
 /*
  * FEATURE: DIMMER BPM INPUT
  */
@@ -103,6 +105,12 @@ void setup() {
   Serial.begin(38400);
   //  Set MIDI baud rate:
   Serial1.begin(31250);
+
+#ifdef PULL_UP_PIN
+  // Use this pin for pull-up on tap input pin
+  pinMode(PULL_UP_PIN, OUTPUT);
+  analogWrite(PULL_UP_PIN, 255);
+#endif
 
   // Set pin modes
 #ifdef BLINK_OUTPUT_PIN
