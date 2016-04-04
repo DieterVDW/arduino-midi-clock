@@ -16,9 +16,17 @@
 /*
  * FEATURE: DIMMER BPM INPUT
  */
-#define DIMMER_INPUT_PIN A0
+// #define DIMMER_INPUT_PIN A0
 
 #define DIMMER_CHANGE_MARGIN 20 // Big value to make sure this doesn't interfere. Tweak as needed.
+
+/*
+ * FEATURE: DIMMER BPM INCREASE/DECREASE
+ */
+#define DIMMER_CHANGE_PIN A1
+#define DEAD_ZONE 50
+#define CHANGE_THRESHOLD 5000
+#define RATE_DIVISOR 30
 
 /*
  * FEATURE: BLINK TEMPO LED
@@ -73,15 +81,15 @@
  */
 #define MIDI_TIMING_CLOCK 0xF8
 #define CLOCKS_PER_BEAT 24
-#define MINIMUM_BPM 40 // Used for debouncing
-#define MAXIMUM_BPM 300 // Used for debouncing
+#define MINIMUM_BPM 400 // Used for debouncing
+#define MAXIMUM_BPM 3000 // Used for debouncing
 
 long intervalMicroSeconds;
 int bpm;  // BPM in tenths of a BPM!!
 
 boolean initialized = false;
-long minimumTapInterval = 60L * 1000 * 1000 / MAXIMUM_BPM;
-long maximumTapInterval = 60L * 1000 * 1000 / MINIMUM_BPM;
+long minimumTapInterval = 60L * 1000 * 1000 * 10 / MAXIMUM_BPM;
+long maximumTapInterval = 60L * 1000 * 1000 * 10 / MINIMUM_BPM;
 
 volatile long firstTapTime = 0;
 volatile long lastTapTime = 0;
@@ -97,6 +105,10 @@ long lastStartStopTime = 0;
 #ifdef TM1637_DISPLAY
 TM1637Display display(TM1637_CLK_PIN, TM1637_DIO_PIN);
 uint8_t tm1637_data[4] = {0x00, 0x00, 0x00, 0x00};
+#endif
+
+#ifdef DIMMER_CHANGE_PIN
+long changeValue = 0;
 #endif
 
 void setup() {
@@ -121,7 +133,7 @@ void setup() {
   // Get the saved BPM value from 2 stored bytes: MSB LSB
   bpm = EEPROM.read(EEPROM_ADDRESS) << 8;
   bpm += EEPROM.read(EEPROM_ADDRESS + 1);
-  if (bpm < MINIMUM_BPM * 10 || bpm > MAXIMUM_BPM * 10) {
+  if (bpm < MINIMUM_BPM || bpm > MAXIMUM_BPM) {
     bpm = 1200;
   }
 #endif
@@ -161,8 +173,10 @@ void loop() {
     long avgTapInterval = (lastTapTime - firstTapTime) / (timesTapped - 1);
     if ((now - lastTapTime) > (avgTapInterval * EXIT_MARGIN / 100)) {
       bpm = 60L * 1000 * 1000 * 10 / avgTapInterval;
-
       updateBpm(now);
+  
+      // Update blinkCount to make sure LED blink matches tapped beat
+      blinkCount = ((now - lastTapTime) * 24 / avgTapInterval) % CLOCKS_PER_BEAT;
 
       timesTapped = 0;
     }
@@ -177,10 +191,28 @@ void loop() {
   if (curDimValue > lastDimmerValue + DIMMER_CHANGE_MARGIN
       || curDimValue < lastDimmerValue - DIMMER_CHANGE_MARGIN) {
     // We've got movement!!
-    bpm = map(curDimValue, 0, 1024, MINIMUM_BPM * 10, MAXIMUM_BPM * 10);
+    bpm = map(curDimValue, 0, 1024, MINIMUM_BPM, MAXIMUM_BPM);
 
     updateBpm(now);
     lastDimmerValue = curDimValue;
+  }
+#endif
+
+#ifdef DIMMER_CHANGE_PIN
+  int curDimValue = analogRead(DIMMER_CHANGE_PIN);
+  if (bpm > MINIMUM_BPM && curDimValue < (512 - DEAD_ZONE)) {
+    int val = (512 - DEAD_ZONE - curDimValue) / RATE_DIVISOR;
+    changeValue += val * val;
+  } else if (bpm < MAXIMUM_BPM && curDimValue > (512 + DEAD_ZONE)) {
+    int val = (curDimValue - 512 - DEAD_ZONE) / RATE_DIVISOR;
+    changeValue += val * val;
+  } else {
+    changeValue = 0;
+  }
+  if (changeValue > CHANGE_THRESHOLD) {
+    bpm += curDimValue < 512 ? -1 : 1;
+    updateBpm(now);
+    changeValue = 0;
   }
 #endif
 
